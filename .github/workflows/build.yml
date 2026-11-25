@@ -1,0 +1,44 @@
+name: Construire le DMG et le .ipa
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Version de Xcode
+        run: xcodebuild -version
+
+      - name: Appli Mac + DMG
+        run: |
+          cd mac
+          NO_LAUNCH=1 bash build.sh
+
+      - name: Appli iPhone (.ipa non signé, à installer avec Sideloadly)
+        run: |
+          cd ios
+          xcodebuild -project Rencontres.xcodeproj -target Rencontres -sdk iphoneos -configuration Release \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" SYMROOT="$PWD/build" build
+          rm -rf Payload && mkdir Payload
+          cp -R build/Release-iphoneos/Rencontres.app Payload/
+          zip -qry Rencontres.ipa Payload
+
+      - name: Publier les fichiers à télécharger
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_number }}
+          name: Version ${{ github.run_number }}
+          body: |
+            Mac : télécharge Rencontres.dmg, ouvre-le, glisse Rencontres dans Applications.
+            iPhone : télécharge Rencontres.ipa et installe-le avec Sideloadly (sideloadly.io) et ton identifiant Apple.
+          files: |
+            mac/build/Rencontres.dmg
+            ios/Rencontres.ipa
