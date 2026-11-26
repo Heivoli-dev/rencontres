@@ -7,22 +7,27 @@ struct RencontresApp: App {
     @StateObject private var state: AppState
     @StateObject private var ble: BLEManager
     private let alerts = Alerts()
+    private let bridge: WebBridge
 
     init() {
         let s = AppState()
         let b = BLEManager(state: s)
         _state = StateObject(wrappedValue: s)
         _ble = StateObject(wrappedValue: b)
+        let bridge = WebBridge(state: s, ble: b)
+        self.bridge = bridge
         let alerts = self.alerts
         alerts.requestPermission()
-        b.onEncounter = { e in alerts.announce(e, settings: s.settings) }
+        b.onEncounter = { e in
+            alerts.announce(e, settings: s.settings)
+            bridge.announce(e)
+        }
     }
 
     var body: some Scene {
         MenuBarExtra {
-            ContentView()
-                .environmentObject(state)
-                .environmentObject(ble)
+            WebAppView(bridge: bridge)
+                .frame(width: 390, height: 720)
         } label: {
             Image(systemName: ble.nearbyCount > 0 ? "sparkles" : "sparkle")
         }
