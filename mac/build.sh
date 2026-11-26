@@ -18,6 +18,7 @@ xcrun swiftc -O -swift-version 5 -parse-as-library \
 
 cp Info.plist "$APP/Contents/Info.plist"
 cp ../shared/creature/creature.html "$APP/Contents/Resources/creature.html"
+cp ../shared/creature/plaza.html "$APP/Contents/Resources/plaza.html"
 
 echo "→ Signature locale…"
 codesign --force --deep --sign - "$APP"

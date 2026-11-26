@@ -90,3 +90,52 @@ final class CreatureSnapshotter: NSObject, ObservableObject, WKNavigationDelegat
         }
     }
 }
+
+/// La place : toutes les créatures croisées se baladent ensemble (shared/creature/plaza.html).
+struct PlazaView: NSViewRepresentable {
+    var me: Profile
+    var others: [Encounter]
+
+    func makeCoordinator() -> Coordinator { Coordinator() }
+
+    func makeNSView(context: Context) -> WKWebView {
+        let web = WKWebView(frame: .zero, configuration: WKWebViewConfiguration())
+        web.setValue(false, forKey: "drawsBackground")
+        web.navigationDelegate = context.coordinator
+        context.coordinator.web = web
+        if let url = Bundle.main.url(forResource: "plaza", withExtension: "html") {
+            web.loadFileURL(url, allowingReadAccessTo: url.deletingLastPathComponent())
+        }
+        return web
+    }
+
+    func updateNSView(_ web: WKWebView, context: Context) {
+        context.coordinator.push(PlazaView.payload(me: me, others: others))
+    }
+
+    static func payload(me: Profile, others: [Encounter]) -> String {
+        func item(_ p: Profile) -> [String: Any] { ["name": p.pseudo, "recipe": p.recipe.map { Int($0) }, "message": p.message] }
+        let dict: [String: Any] = ["me": item(me), "others": others.prefix(14).map { item($0.profile) }]
+        let data = (try? JSONSerialization.data(withJSONObject: dict)) ?? Data("{}".utf8)
+        return String(decoding: data, as: UTF8.self)
+    }
+
+    final class Coordinator: NSObject, WKNavigationDelegate {
+        weak var web: WKWebView?
+        private var loaded = false
+        private var pending: String?
+        private var sent: String?
+
+        func push(_ json: String) {
+            pending = json
+            guard loaded, json != sent else { return }
+            sent = json
+            web?.evaluateJavaScript("setPlaza(\(json))")
+        }
+
+        func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+            loaded = true
+            if let p = pending { push(p) }
+        }
+    }
+}

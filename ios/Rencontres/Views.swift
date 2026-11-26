@@ -51,16 +51,9 @@ struct PlaceView: View {
                     .padding(.horizontal, 12).padding(.vertical, 6)
                     .background(Capsule().fill(Color(red: 0.89, green: 0.96, blue: 0.92)))
                 }
-                ZStack(alignment: .bottom) {
-                    LinearGradient(stops: [.init(color: Color(red: 0.66, green: 0.87, blue: 0.98), location: 0),
-                                           .init(color: Color(red: 0.9, green: 0.96, blue: 1), location: 0.6),
-                                           .init(color: Color(red: 0.55, green: 0.82, blue: 0.48), location: 0.6),
-                                           .init(color: Color(red: 0.39, green: 0.75, blue: 0.35), location: 1)],
-                                   startPoint: .top, endPoint: .bottom)
-                    CreatureView(recipe: state.me.recipe).frame(height: 280)
-                }
-                .frame(height: 300)
-                .clipShape(RoundedRectangle(cornerRadius: 26))
+                PlazaView(me: state.me, others: state.encounters)
+                    .frame(height: 420)
+                    .clipShape(RoundedRectangle(cornerRadius: 26))
                 if !ble.status.hasPrefix("Recherche") {
                     Text(ble.status).font(.system(size: 13, weight: .semibold)).foregroundColor(orange)
                 }

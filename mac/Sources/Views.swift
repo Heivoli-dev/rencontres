@@ -8,12 +8,13 @@ private let sub = Color(red: 0.34, green: 0.39, blue: 0.44)
 struct ContentView: View {
     @EnvironmentObject var state: AppState
     @EnvironmentObject var ble: BLEManager
-    @State private var tab = 0
+    @State private var tab = 3
 
     var body: some View {
         VStack(spacing: 10) {
             header
             Picker("", selection: $tab) {
+                Text("Place").tag(3)
                 Text("Rencontres").tag(0)
                 Text("Profil").tag(1)
                 Text("Réglages").tag(2)
@@ -22,6 +23,8 @@ struct ContentView: View {
             .labelsHidden()
             Group {
                 switch tab {
+                case 3: PlazaView(me: state.me, others: state.encounters)
+                        .clipShape(RoundedRectangle(cornerRadius: 18))
                 case 0: EncountersList()
                 case 1: ProfileEditor()
                 default: SettingsPane()
